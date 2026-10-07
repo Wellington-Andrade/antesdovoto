@@ -78,7 +78,7 @@ export function Experience() {
   }, [index, initialized, update]);
   function move(delta: number) {
     setIndex((i) => Math.max(0, Math.min(cards.length - 1, i + delta)));
-    titleRef.current?.focus();
+    titleRef.current?.focus({ preventScroll: true });
   }
   useEffect(() => {
     function key(e: KeyboardEvent) {

@@ -1,6 +1,34 @@
 import { test, expect } from "@playwright/test";
 import { cards, chapters, sources } from "../src/data/content";
 
+test("next and back preserve the reading scroll position", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/experiencia?card=comparacao-educacao");
+  await expect(
+    page.getByRole("heading", { name: "Educação: o que os planos propõem." }),
+  ).toBeVisible();
+  await page.addStyleTag({
+    content: "html { scroll-behavior: auto !important; }",
+  });
+  const next = page.getByRole("button", { name: "Próximo", exact: true });
+  await next.scrollIntoViewIfNeeded();
+  const before = await page.evaluate(() => window.scrollY);
+  expect(before).toBeGreaterThan(100);
+  await next.click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Saúde: como cada programa aborda o acesso.",
+    }),
+  ).toBeAttached();
+  await expect(page.locator(".focus-heading")).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(before);
+  await page.getByRole("button", { name: "Voltar", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Educação: o que os planos propõem." }),
+  ).toBeAttached();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(before);
+});
+
 test("data references and configured duration are consistent", () => {
   expect(new Set(cards.map((c) => c.id)).size).toBe(cards.length);
   expect(chapters.reduce((sum, ch) => sum + ch.estimatedSeconds, 0)).toBe(300);
